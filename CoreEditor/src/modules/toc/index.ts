@@ -35,7 +35,7 @@ export function getTableOfContents() {
   const tree = (() => {
     const length = state.doc.length;
     // When the doc is small enough (100 KB), we can safely try getting a parse tree
-    if (length < 100 * 1024) {
+    if (length < 200 * 1024) {
       return ensureSyntaxTree(state, length) ?? syntaxTree(state);
     }
 
