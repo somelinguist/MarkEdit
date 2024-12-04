@@ -95,6 +95,7 @@ extension EditorViewController: EditorModuleCoreDelegate {
     }
 
     loadingIndicator.scaleTo(2.0)
+    updateSidebar()
   }
 
   func editorCoreBackgroundColorDidChange(_ sender: EditorModuleCore, color: UInt32) {
@@ -160,6 +161,7 @@ extension EditorViewController: EditorModuleCoreDelegate {
   func editorCoreCompositionEnded(_ sender: EditorModuleCore, selectedLineColumn: LineColumnInfo) {
     statusView.updateLineColumn(selectedLineColumn)
     layoutStatusView()
+    updateSidebar()
   }
 
   func editorCoreLinkClicked(_ sender: EditorModuleCore, link: String) {

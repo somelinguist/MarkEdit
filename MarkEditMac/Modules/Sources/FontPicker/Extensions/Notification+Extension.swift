@@ -8,6 +8,7 @@ import Foundation
 
 public extension Notification.Name {
   static let fontSizeChanged = Self("fontSizeChanged")
+  static let headingSelected = Self("headingSelected")
 }
 
 extension NotificationCenter {

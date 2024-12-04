@@ -79,6 +79,7 @@ extension NSToolbarItem.Identifier {
   static let shareDocument = newItem("shareDocument")
   static let copyPandocCommand = newItem("copyPandocCommand")
   static let writingTools = newItem("writingTools")
+  static let trackingSplitItem = NSToolbarItem.Identifier(rawValue: "TrackingSplitItem")
 
   static var defaultItems: [NSToolbarItem.Identifier] {
     [
@@ -87,6 +88,9 @@ extension NSToolbarItem.Identifier {
       .toggleBold,
       .toggleItalic,
       .toggleList,
+      .inspectorTrackingSeparator,
+      .flexibleSpace,
+      .toggleInspector,
     ]
   }
 
@@ -108,6 +112,7 @@ extension NSToolbarItem.Identifier {
       .statistics,
       .shareDocument,
       .copyPandocCommand,
+      .toggleInspector,
     ]
     + {
       if #available(macOS 15.1, *), MarkEditWritingTools.isAvailable {

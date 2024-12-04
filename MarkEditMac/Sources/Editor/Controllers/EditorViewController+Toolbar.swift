@@ -92,6 +92,10 @@ extension EditorViewController: NSToolbarDelegate {
     }
 
     item?.isBordered = true
+
+    if itemIdentifier == .toggleInspector {
+      item?.image = NSImage(systemSymbolName: "sidebarRight", accessibilityDescription: item?.label)
+    }
     return item
   }
 
@@ -247,6 +251,10 @@ private extension EditorViewController {
     }
   }
 
+  //  var toggleSidebar: NSToolbarItem {
+  //    
+  //  }
+
   func updateTableOfContentsMenu(_ menu: NSMenu) {
     // Remove existing items, the first two are placeholders that we want to keep
     for (index, item) in menu.items.enumerated() where index > 1 {
@@ -311,7 +319,12 @@ private extension EditorViewController {
       return
     }
 
-    startTextEditing()
-    bridge.toc.gotoHeader(headingInfo: headingInfo)
+    NotificationCenter.default.post(
+      name: .headingSelected,
+      object: headingInfo
+    )
+
+//    startTextEditing()
+//    bridge.toc.gotoHeader(headingInfo: headingInfo)
   }
 }

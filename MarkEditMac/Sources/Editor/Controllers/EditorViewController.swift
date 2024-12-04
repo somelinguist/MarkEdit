@@ -12,7 +12,7 @@ import MarkEditKit
 import Statistics
 import TextCompletion
 
-final class EditorViewController: NSViewController {
+final class EditorViewController: NSSplitViewController {
   var hasFinishedLoading = false
   var hasUnfinishedAnimations = false
   var hasBeenEdited = false
@@ -71,6 +71,17 @@ final class EditorViewController: NSViewController {
     representedObject as? EditorDocument
   }
 
+  private(set) lazy var mainViewController = {
+    let wrapperController = NSViewController()
+    let wrapper = NSView()
+    wrapperController.view = wrapper
+    return wrapperController
+  }()
+
+  private(set) lazy var sideBarViewController = {
+    return SidebarViewController()
+  }()
+
   var isFindPanelFirstResponder: Bool {
     guard findPanel.mode != .hidden else {
       return false
@@ -103,7 +114,7 @@ final class EditorViewController: NSViewController {
     let view = View()
     view.image = NSImage(named: "AppIcon")
 
-    Logger.assert(view.image != nil, "Missing AppIcon from the main bundle")
+    // Logger.assert(view.image != nil, "Missing AppIcon from the main bundle")
     return view
   }()
 
@@ -231,13 +242,18 @@ final class EditorViewController: NSViewController {
     fatalError("init(coder:) has not been implemented")
   }
 
-  override func loadView() {
-    setUp()
-  }
+  // override func loadView() {
+    // setUp()
+  // }
 
   override func viewWillAppear() {
     super.viewWillAppear()
     configureToolbar()
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    setUp()
   }
 
   override func viewDidLayout() {
@@ -245,6 +261,15 @@ final class EditorViewController: NSViewController {
     guard !hasUnfinishedAnimations else {
       return
     }
+
+    layoutPanels()
+    layoutWebView()
+    layoutLoadingIndicator()
+    layoutStatusView()
+  }
+
+  override func splitViewDidResizeSubviews(_ notification: Notification) {
+    super.splitViewDidResizeSubviews(notification)
 
     layoutPanels()
     layoutWebView()

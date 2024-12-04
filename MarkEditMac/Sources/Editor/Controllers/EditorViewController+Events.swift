@@ -72,4 +72,13 @@ extension EditorViewController {
       return event
     }
   }
+
+  @objc func selectedHeadingDidChange(_ notification: Notification) {
+    guard let headingInfo = notification.object as? HeadingInfo else {
+      return
+    }
+
+    startTextEditing()
+    bridge.toc.gotoHeader(headingInfo: headingInfo)
+  }
 }

@@ -485,6 +485,12 @@ private extension EditorViewController {
       self.toggleStatisticsPopover(sourceView: self.statisticsSourceView)
     }
   }
+
+  //  @IBAction func toggleSidebarAction(_ sender: Any?) {
+  //    DispatchQueue.main.async {
+  //      self.toggleSidebar()
+  //    }
+  //  }
 }
 
 // MARK: - View

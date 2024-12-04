@@ -24,7 +24,7 @@ extension EditorViewController {
       // Perform a cross-dissolve effect to make theme switching smoother
       let snapshotView = NSImageView(image: image)
       snapshotView.frame = self.webView.bounds
-      self.view.addSubview(snapshotView)
+      self.mainViewController.view.addSubview(snapshotView)
       self.setTheme(theme)
 
       NSAnimationContext.runAnimationGroup { _ in

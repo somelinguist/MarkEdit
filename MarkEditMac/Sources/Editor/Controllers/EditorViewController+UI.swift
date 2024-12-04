@@ -12,17 +12,31 @@ import Statistics
 
 extension EditorViewController {
   func setUp() {
-    let wrapper = NSView(frame: CGRect(x: 0, y: 0, width: 720, height: 480))
-    self.view = wrapper
+    splitView.isVertical = true
+    splitView.dividerStyle = .thin
+    splitView.identifier = NSUserInterfaceItemIdentifier("EditorSplitView")
+    splitView.autosaveName = "EditorSplitViewAutoSave"
 
-    wrapper.addSubview(replacePanel) // ReplacePanel must go before FindPanel
-    wrapper.addSubview(findPanel)
-    wrapper.addSubview(panelDivider)
-    wrapper.addSubview(webView)
-    wrapper.addSubview(statusView)
+    let mainViewItem = NSSplitViewItem(viewController: mainViewController)
+    mainViewItem.allowsFullHeightLayout = true
+    addSplitViewItem(mainViewItem)
+
+    let sideBarItem = NSSplitViewItem(inspectorWithViewController: sideBarViewController)
+    sideBarItem.titlebarSeparatorStyle = .shadow
+    sideBarItem.minimumThickness = 200
+    sideBarItem.maximumThickness = 400
+    sideBarItem.canCollapse = true
+    sideBarItem.isCollapsed = false
+    addSplitViewItem(sideBarItem)
+
+    mainViewController.view.addSubview(replacePanel) // ReplacePanel must go before FindPanel
+    mainViewController.view.addSubview(findPanel)
+    mainViewController.view.addSubview(panelDivider)
+    mainViewController.view.addSubview(webView)
+    mainViewController.view.addSubview(statusView)
 
     if !hasFinishedLoading {
-      wrapper.addSubview(loadingIndicator)
+      mainViewController.view.addSubview(loadingIndicator)
     }
 
     layoutPanels()
@@ -49,6 +63,13 @@ extension EditorViewController {
       object: nil
     )
 
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(selectedHeadingDidChange(_:)),
+      name: .headingSelected,
+      object: nil
+    )
+
     addLocalMonitorForEvents()
   }
 
@@ -71,7 +92,7 @@ extension EditorViewController {
   func updateWindowColors(_ theme: AppTheme) {
     let backgroundColor = webBackgroundColor ?? theme.windowBackground
     view.window?.backgroundColor = backgroundColor
-    view.window?.toolbarContainerView?.layerBackgroundColor = backgroundColor
+    view.window?.toolbarEffectView?.layerBackgroundColor = backgroundColor
 
     let prefersTintedToolbar = theme.prefersTintedToolbar
     (view.window as? EditorWindow)?.prefersTintedToolbar = prefersTintedToolbar
@@ -108,7 +129,7 @@ extension EditorViewController {
     findPanel.update(animated).frame = CGRect(
       x: 0,
       y: contentHeight - (findPanel.mode == .hidden ? 0 : findPanel.frame.height),
-      width: view.bounds.width,
+      width: mainViewController.view.bounds.width,
       height: findPanel.frame.height
     )
 
@@ -120,7 +141,7 @@ extension EditorViewController {
     )
 
     replacePanel.layoutInfo = (findPanel.searchField.frame, findPanel.findButtons.frame.height)
-    panelDivider.update(animated).frame = CGRect(x: 0, y: (findPanel.mode == .replace ? replacePanel : findPanel).frame.minY, width: view.frame.width, height: panelDivider.length)
+    panelDivider.update(animated).frame = CGRect(x: 0, y: (findPanel.mode == .replace ? replacePanel : findPanel).frame.minY, width: mainViewController.view.frame.width, height: panelDivider.length)
   }
 
   func layoutWebView(animated: Bool = false) {
@@ -133,7 +154,7 @@ extension EditorViewController {
     webView.update(animated).frame = CGRect(
       x: 0,
       y: offset,
-      width: view.bounds.width,
+      width: mainViewController.view.bounds.width,
       height: height
     )
   }
@@ -145,25 +166,45 @@ extension EditorViewController {
 
     let size: Double = 72
     loadingIndicator.frame = CGRect(
-      x: (view.bounds.width - size) * 0.5,
-      y: (view.bounds.height - size) * 0.5,
+      x: (mainViewController.view.bounds.width - size) * 0.5,
+      y: (mainViewController.view.bounds.height - size) * 0.5,
       width: size,
       height: size
     )
 
     // Hide the indicator when the window is small enough
-    loadingIndicator.isHidden = view.bounds.width < 200 || view.bounds.height < 200
+    loadingIndicator.isHidden = mainViewController.view.bounds.width < 200 || mainViewController.view.bounds.height < 200
+  }
+
+  func updateSidebar() {
+
+    Task {
+      let tableOfContents = await tableOfContents
+
+      let (sourceText, fileURL, mainTitle) = await {
+        let selectedText = (try? await bridge.selection.getText()) ?? ""
+        let mainTitle = Localized.Toolbar.statistics
+
+        return (
+          selectedText.isEmpty ? (await editorText ?? "") : selectedText,
+          selectedText.isEmpty ? document?.fileURL : nil,
+          selectedText.isEmpty ? mainTitle : "\(mainTitle) (\(Localized.Settings.selection))"
+        )
+      }()
+
+      sideBarViewController.updateDocumentData(sourceText: sourceText, fileURL: fileURL, mainTitle: mainTitle, headings: tableOfContents)
+    }
   }
 
   func layoutStatusView() {
     statusView.frame = CGRect(
-      x: view.bounds.width - statusView.frame.width - 6,
+      x: mainViewController.view.bounds.width - statusView.frame.width - 6,
       y: bottomPanelHeight + 8, // Vertical margins are intentionally larger to visually look the same
       width: statusView.frame.width,
       height: statusView.frame.height
     )
 
-    view.mirrorImmediateSubviewIfNeeded(statusView)
+    mainViewController.view.mirrorImmediateSubviewIfNeeded(statusView)
   }
 
   func handleMouseMoved(_ event: NSEvent) {
@@ -174,7 +215,7 @@ extension EditorViewController {
     // WKWebView contentEditable keeps showing i-beam, fix that
     if NSCursor.current != NSCursor.arrow {
       let location = event.locationInWindow.y
-      if location > contentHeight && location < view.frame.height {
+      if location > contentHeight && location < mainViewController.view.frame.height {
         NSCursor.arrow.push()
       }
     }

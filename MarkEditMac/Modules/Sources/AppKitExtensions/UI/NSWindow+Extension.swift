@@ -17,7 +17,7 @@ public extension NSWindow {
     // What we want is an NSVisualEffectView child of an NSTitlebarView
     toolbarContainerView?.subviews.compactMap {
       $0 as? NSVisualEffectView
-    }.first
+    }.last
   }
 
   var toolbarTitleView: NSView? {
